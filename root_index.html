@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f7fb">
+  <title>마음결 | 학년말 기록 관리</title>
+  <style>
+    :root {
+      --ink: #20243a;
+      --muted: #85899d;
+      --line: #eceef4;
+      --paper: #fff;
+      --canvas: #f6f7fb;
+      --purple: #7065df;
+      --purple-dark: #584dc9;
+      --purple-soft: #f0efff;
+      --green: #2e9b77;
+      --green-soft: #e8f7f1;
+      --amber: #db9a38;
+      --amber-soft: #fff5e6;
+      --rose: #d7667b;
+      --shadow: 0 8px 30px rgba(37, 43, 76, .055);
+      font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: var(--canvas); font-size: 14px; }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+    .app { min-height: 100vh; display: grid; grid-template-columns: 248px minmax(0, 1fr); }
+    .sidebar { background: #fff; border-right: 1px solid var(--line); padding: 27px 17px 20px; display: flex; flex-direction: column; min-height: 100vh; }
+    .brand { display: flex; align-items: center; gap: 11px; padding: 0 11px; margin-bottom: 35px; }
+    .brand-mark { width: 38px; height: 38px; border-radius: 13px; display: grid; place-items: center; color: white; font-size: 19px; background: linear-gradient(145deg,#8f83f0,#6559d5); box-shadow: 0 6px 15px #7267df40; }
+    .brand-name { font-size: 17px; font-weight: 800; letter-spacing: -.5px; }
+    .brand-sub { color: #a0a3b2; font-size: 10px; margin-top: 3px; letter-spacing: .3px; }
+    .side-label { padding: 0 12px; margin: 0 0 10px; color: #a3a6b5; font-size: 10px; font-weight: 800; letter-spacing: 1px; }
+    .nav { display: grid; gap: 5px; }
+    .nav-item { width: 100%; display: flex; align-items: center; gap: 12px; border: 0; background: transparent; color: #72768b; padding: 11px 12px; text-align: left; border-radius: 10px; font-size: 13px; transition: .18s ease; }
+    .nav-item:hover { background: #f8f8fc; color: var(--ink); }
+    .nav-item.active { color: var(--purple-dark); font-weight: 700; background: var(--purple-soft); }
+    .nav-icon { width: 18px; text-align: center; font-size: 16px; }
+    .nav-count { margin-left: auto; font-size: 11px; color: #a0a3b2; }
+    .class-card { margin: 28px 5px 0; padding: 14px; background: #fafaff; border: 1px solid #eeedfb; border-radius: 13px; }
+    .class-card small { color: #999cb0; font-size: 10px; }
+    .class-card strong { display: block; margin-top: 7px; font-size: 14px; }
+    .class-switch { display:flex; gap:7px; margin-top: 12px; }
+    .class-switch select { min-width: 0; flex:1; padding: 7px 8px; border:1px solid var(--line); border-radius:7px; background:white; color:#575b70; font-size:11px; }
+    .side-bottom { margin-top:auto; padding: 18px 8px 0; }
+    .teacher { display:flex; align-items:center; gap:10px; padding: 13px 5px 0; border-top:1px solid var(--line); }
+    .avatar { width:34px; height:34px; flex:none; display:grid; place-items:center; border-radius:50%; color:#6559cf; background:#eeedff; font-weight:800; }
+    .teacher-name { font-size:12px; font-weight:700; }
+    .teacher-role { margin-top:3px; font-size:10px; color:#a0a3b2; }
+    .main { min-width:0; padding: 27px clamp(20px,4vw,54px) 50px; }
+    .topbar { display:flex; align-items:center; justify-content:space-between; gap:18px; margin-bottom:31px; }
+    .crumb { color:#9b9eae; font-size:12px; }
+    .crumb b { color:#62667b; font-weight:600; }
+    .top-actions { display:flex; align-items:center; gap:10px; }
+    .saved-status { display:flex; align-items:center; gap:6px; color:#85899d; font-size:11px; margin-right:4px; white-space:nowrap; }
+    .saved-dot { width:7px; height:7px; border-radius:50%; background:#4bb88c; }
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:9px 13px; border:1px solid #e6e7ef; border-radius:9px; background:white; color:#5f6378; font-size:12px; font-weight:650; transition:.18s ease; white-space:nowrap; }
+    .btn:hover { border-color:#c8c4f4; color:var(--purple-dark); transform:translateY(-1px); }
+    .btn.primary { color:white; background:var(--purple); border-color:var(--purple); box-shadow:0 4px 10px #7065df30; }
+    .btn.primary:hover { background:var(--purple-dark); color:white; }
+    .btn.small { padding:7px 10px; font-size:11px; }
+    .page-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:20px; margin-bottom:23px; }
+    .eyebrow { color:var(--purple); font-weight:750; font-size:11px; letter-spacing:.45px; margin-bottom:8px; }
+    h1 { font-size:26px; letter-spacing:-1.1px; margin:0; line-height:1.3; }
+    .subtitle { color:#9296a8; font-size:12px; margin-top:7px; }
+    .year-pill { border:1px solid #e5e6ef; border-radius:9px; background:white; padding:9px 11px; color:#62667b; font-weight:650; font-size:12px; }
+    .stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:13px; margin-bottom:20px; }
+    .stat-card { background:white; border:1px solid #f0f1f5; border-radius:13px; padding:16px 17px; box-shadow:0 2px 6px #22243a04; }
+    .stat-top { display:flex; justify-content:space-between; align-items:center; color:#8f93a5; font-size:11px; }
+    .stat-emoji { width:29px;height:29px;display:grid;place-items:center;border-radius:9px;background:#f2f1ff;font-size:14px; }
+    .stat-num { margin-top:12px; font-size:23px; font-weight:800; letter-spacing:-.7px; }
+    .stat-num span { color:#9a9daf; font-size:12px; font-weight:500; margin-left:3px; }
+    .stat-note { color:#a0a3b2; font-size:10px; margin-top:4px; }
+    .progress { height:4px; border-radius:4px; background:#f0f0f5; margin-top:10px; overflow:hidden; }
+    .progress i { display:block; height:100%; width:0; border-radius:4px; background:var(--purple); transition:width .25s; }
+    .workspace { display:grid; grid-template-columns:minmax(0,1.52fr) minmax(310px,.88fr); gap:17px; align-items:start; }
+    .panel { background:white; border:1px solid #f0f1f5; border-radius:14px; box-shadow:var(--shadow); min-width:0; }
+    .panel-head { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:19px 20px 15px; }
+    .panel-title { font-size:14px; font-weight:800; }
+    .panel-description { color:#9b9eae; font-size:10px; margin-top:5px; }
+    .panel-tools { display:flex; align-items:center; gap:8px; }
+    .search { position:relative; }
+    .search span { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:#a1a4b2; font-size:14px; }
+    .search input { width:150px; padding:8px 9px 8px 29px; border:1px solid #eaebf1; outline:none; border-radius:8px; font-size:11px; transition:.2s; }
+    .search input:focus { border-color:#bdb7ef; box-shadow:0 0 0 3px #7065df12; }
+    .filter-select { padding:8px; border:1px solid #eaebf1; border-radius:8px; background:white; color:#73778b; font-size:11px; }
+    .table-wrap { overflow:auto; }
+    table { width:100%; border-collapse:collapse; text-align:left; }
+    th { padding:10px 12px; border-top:1px solid #f1f2f6; border-bottom:1px solid #f1f2f6; background:#fbfbfd; color:#9a9dae; font-size:10px; font-weight:650; white-space:nowrap; }
+    th:first-child,td:first-child { padding-left:20px; }
+    td { padding:12px; border-bottom:1px solid #f3f4f7; color:#676b80; font-size:11px; white-space:nowrap; }
+    tbody tr { cursor:pointer; transition:.15s; }
+    tbody tr:hover { background:#fafaff; }
+    tbody tr.selected { background:#f7f6ff; }
+    .student { display:flex; align-items:center; gap:9px; }
+    .student-avatar { width:30px;height:30px;display:grid;place-items:center;border-radius:10px;background:#f1f0ff;color:#756add;font-weight:800;font-size:11px; }
+    .student-name { color:#34384e; font-weight:750; font-size:11px; }
+    .student-meta { color:#a3a6b4; font-size:9px; margin-top:3px; }
+    .status { display:inline-flex; align-items:center; gap:5px; padding:5px 8px; border-radius:20px; font-size:9px; font-weight:700; }
+    .status.complete { color:var(--green); background:var(--green-soft); }
+    .status.progressing { color:#c48a31; background:var(--amber-soft); }
+    .status.empty { color:#979aab; background:#f2f3f6; }
+    .status i { width:5px;height:5px;border-radius:50%;background:currentColor; }
+    .row-arrow { color:#b3b5c1; font-size:15px; }
+    .empty-state { padding:36px 15px; text-align:center; color:#969aac; font-size:12px; }
+    .table-foot { display:flex; align-items:center; justify-content:space-between; padding:12px 20px; color:#a0a3b2; font-size:10px; }
+    .detail-panel { position:sticky; top:16px; }
+    .detail-head { padding:18px 19px 15px; border-bottom:1px solid #f0f1f5; }
+    .detail-student { display:flex; align-items:center; gap:11px; }
+    .detail-student .student-avatar { width:39px;height:39px;border-radius:12px;font-size:14px; }
+    .detail-name { font-size:15px; font-weight:800; }
+    .detail-sub { color:#9b9eae; font-size:10px; margin-top:4px; }
+    .detail-body { padding:17px 19px 19px; }
+    .field { margin-bottom:16px; }
+    .field-label { display:flex; justify-content:space-between; gap:10px; align-items:center; margin-bottom:7px; font-size:11px; font-weight:750; color:#51556b; }
+    .field-label small { color:#a2a5b3; font-weight:500; font-size:9px; }
+    textarea { display:block; width:100%; resize:vertical; min-height:94px; border:1px solid #e8e9f0; border-radius:9px; padding:10px 11px; outline:none; color:#41455b; font-size:11px; line-height:1.75; transition:.2s; }
+    textarea:focus { border-color:#bdb7ef; box-shadow:0 0 0 3px #7065df12; }
+    textarea::placeholder { color:#b7b9c5; }
+    .opinion { min-height:112px; }
+    .helper { display:flex; justify-content:space-between; color:#a1a4b2; font-size:9px; margin-top:5px; }
+    .chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+    .chip { border:1px solid #e9e8f8; border-radius:20px; background:#fafaff; color:#7770bd; padding:5px 8px; font-size:9px; transition:.15s; }
+    .chip:hover { background:var(--purple-soft); border-color:#d6d2fb; }
+    .detail-actions { display:flex; gap:8px; }
+    .detail-actions .btn { flex:1; }
+    .tip { display:flex; gap:9px; align-items:flex-start; margin-top:14px; padding:10px; background:#f8f8fd; color:#9094a6; border-radius:9px; font-size:9px; line-height:1.6; }
+    .tip strong { color:#73778b; }
+    .toast { position:fixed; z-index:10; bottom:22px; left:50%; transform:translate(-50%,20px); opacity:0; pointer-events:none; padding:10px 15px; background:#25283c; color:white; border-radius:9px; font-size:12px; box-shadow:0 8px 25px #20243a30; transition:.22s; }
+    .toast.show { transform:translate(-50%,0); opacity:1; }
+    .mobile-menu { display:none; }
+    .batch-panel { padding:18px 20px; margin-bottom:17px; }
+    .batch-panel p { margin:7px 0 12px; color:#777b8f; font-size:11px; line-height:1.7; }
+    .batch-actions { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+    .batch-actions input[type=file] { max-width:230px; font-size:11px; }
+    .batch-panel details { margin-top:12px; color:#73778b; font-size:11px; line-height:1.7; }
+    .batch-panel code { color:#584dc9; overflow-wrap:anywhere; }
+    .batch-panel textarea { min-height:75px; margin:8px 0; }
+    .record-section { border-top:1px solid var(--line); padding-top:16px; margin-top:16px; }
+    .record-section h3 { margin:0 0 8px; font-size:12px; }
+    .record-section p { color:#9396a8; font-size:10px; line-height:1.6; margin:5px 0 10px; }
+    .form-input { width:100%; padding:9px; border:1px solid #e8e9f0; border-radius:8px; font-size:11px; color:#41455b; margin-bottom:7px; }
+    .evaluation { border:1px solid #eeeff5; border-radius:9px; padding:10px; margin-bottom:8px; font-size:10px; line-height:1.6; color:#777b8f; overflow-wrap:anywhere; }
+    .evaluation strong { color:#51556b; }
+    .evaluation button { float:right; }
+    .subject-output { margin:12px 0; }
+    .subject-output textarea { min-height:75px; }
+    .notice { color:#777b8f; font-size:10px; line-height:1.6; margin:8px 0; }
+    @media (max-width:1100px) {
+      .app { grid-template-columns:215px minmax(0,1fr); }
+      .main { padding-left:25px; padding-right:25px; }
+      .workspace { grid-template-columns:minmax(0,1.3fr) minmax(290px,.9fr); gap:12px; }
+      .stats { gap:9px; }
+      .stat-card { padding:14px; }
+      .search input { width:125px; }
+    }
+    @media (max-width:850px) {
+      .app { grid-template-columns:1fr; }
+      .sidebar { min-height:0; height:auto; padding:12px 18px; border-right:0; border-bottom:1px solid var(--line); flex-direction:row; align-items:center; justify-content:space-between; }
+      .brand { margin:0; padding:0; }
+      .side-label,.nav,.class-card,.side-bottom { display:none; }
+      .mobile-menu { display:block; border:0; background:#f3f2ff; color:var(--purple); width:36px;height:36px;border-radius:10px; font-size:17px; }
+      .main { padding:22px 18px 40px; }
+      .workspace { grid-template-columns:1fr; }
+      .detail-panel { position:static; }
+      .stats { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    }
+    @media (max-width:560px) {
+      .main { padding:18px 12px 32px; }
+      .topbar { margin-bottom:22px; }
+      .crumb { font-size:10px; }
+      .saved-status { display:none; }
+      .top-actions { gap:6px; }
+      .top-actions .btn { padding:8px 9px; font-size:10px; }
+      .page-heading { align-items:flex-start; }
+      h1 { font-size:22px; }
+      .year-pill { font-size:10px; padding:8px; }
+      .stat-card { padding:12px; }
+      .stat-num { font-size:20px; }
+      .panel-head { padding:15px 13px 12px; align-items:flex-start; }
+      .panel-tools { flex-direction:column; align-items:stretch; }
+      .search input { width:100%; }
+      .filter-select { width:100%; }
+      th { padding:9px 8px; }
+      td { padding:10px 8px; }
+      th:first-child,td:first-child { padding-left:12px; }
+      .hide-mobile { display:none; }
+      .table-foot { padding:10px 13px; }
+      .detail-head { padding:15px 14px; }
+      .detail-body { padding:15px 14px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">✿</div>
+        <div><div class="brand-name">마음결</div><div class="brand-sub">학년말 기록 관리</div></div>
+      </div>
+      <div class="side-label">WORKSPACE</div>
+      <nav class="nav" aria-label="주 메뉴">
+        <button class="nav-item active"><span class="nav-icon">▤</span> 학생 기록 <span class="nav-count" id="nav-count">24</span></button>
+      </nav>
+      <div class="class-card">
+        <small>현재 관리 학급</small>
+        <strong id="sidebar-class">햇살초등학교 · 5학년 2반</strong>
+        <p class="notice">예시 학급 · 한 학급의 기록을 관리합니다.</p>
+      </div>
+      <div class="side-bottom">
+        <div class="teacher">
+          <div class="avatar">김</div>
+          <div><div class="teacher-name">김선생님</div><div class="teacher-role">담임 교사</div></div>
+        </div>
+      </div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <div class="crumb">학급 관리 <span> / </span> <b>학생 기록</b></div>
+        <div class="top-actions">
+          <div class="saved-status"><i class="saved-dot"></i><span id="save-status">모든 변경사항 저장됨</span></div>
+          <button class="btn" id="print-btn">⌑ <span class="hide-mobile">인쇄</span></button>
+          <button class="btn primary" id="export-btn">↓ <span>CSV 내보내기</span></button>
+        </div>
+      </header>
+      <section class="page-heading">
+        <div>
+          <div class="eyebrow">2026학년도 · 2학기</div>
+          <h1>학생 기록 관리</h1>
+          <div class="subtitle">아이들의 한 해 성장을 따뜻한 문장으로 기록해 보세요.</div>
+        </div>
+        <span class="year-pill">예시 학급</span>
+      </section>
+      <section class="stats" aria-label="기록 현황">
+        <div class="stat-card">
+          <div class="stat-top"><span>전체 학생</span><span class="stat-emoji">👩‍🎓</span></div>
+          <div class="stat-num"><b id="total-count">24</b><span>명</span></div>
+          <div class="stat-note">우리 반 학생 수</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top"><span>두 영역 작성됨</span><span class="stat-emoji" style="background:#e8f7f1">✓</span></div>
+          <div class="stat-num"><b id="complete-count">0</b><span>명</span></div>
+          <div class="progress"><i id="completion-bar"></i></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top"><span>작성 중</span><span class="stat-emoji" style="background:#fff5e6">✎</span></div>
+          <div class="stat-num"><b id="progress-count">0</b><span>명</span></div>
+          <div class="stat-note">기록을 이어서 작성해요</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top"><span>미작성</span><span class="stat-emoji" style="background:#f2f3f6">○</span></div>
+          <div class="stat-num"><b id="empty-count">24</b><span>명</span></div>
+          <div class="stat-note">아직 기록이 없는 학생</div>
+        </div>
+      </section>
+      <section class="panel batch-panel">
+        <div class="panel-title">일괄 입력 및 의견 생성</div>
+        <p>학생별 관찰과 교과 평가를 UTF-8 CSV로 올리거나 붙여넣으세요. 같은 학생의 교과 평가는 여러 행으로 입력합니다.</p>
+        <div class="batch-actions">
+          <input type="file" id="csv-file" accept=".csv,text/csv" aria-label="CSV 파일 선택">
+          <button class="btn" id="template-btn">CSV 양식 받기</button>
+          <button class="btn primary" id="generate-all">전체 초안 생성</button>
+        </div>
+        <details>
+          <summary>CSV 형식 및 붙여넣기</summary>
+          <p>첫 행: <code>학생,행동관찰,교과,성취기준,평가내용,평가결과</code><br>학생은 필수입니다. 교과 평가를 입력할 때는 교과·성취기준·평가내용·평가결과를 모두 입력하세요. 동일 이름은 기존 학생에 추가되며, 새 이름은 학생으로 등록됩니다. 동명이인은 구분할 수 없으므로 이름을 다르게 입력하세요. 쉼표나 줄바꿈이 포함된 값은 큰따옴표로 감싸세요. 내보내기 파일은 결과 확인용이며 일괄 입력 양식과 다릅니다.</p>
+          <textarea id="csv-text" aria-label="CSV 붙여넣기" placeholder="CSV 내용을 여기에 붙여넣으세요"></textarea>
+          <button class="btn" id="import-text">붙여넣은 CSV 가져오기</button>
+        </details>
+        <p class="notice">이 앱은 AI가 아닌 정해진 문장 규칙으로 초안을 만듭니다. 사실을 추가하지 않으며 자연스럽지 않은 표현이 있을 수 있으니 반드시 교사가 검토·수정하세요. 데이터는 이 브라우저에만 저장되며, 공용 기기 사용과 CSV 보관에 주의하세요.</p>
+      </section>
+      <section class="workspace">
+        <section class="panel">
+          <div class="panel-head">
+            <div><div class="panel-title">우리 반 학생 <span id="list-count" style="color:#a1a4b2;font-weight:500"></span></div><div class="panel-description">학생을 선택하면 기록을 작성할 수 있어요.</div></div>
+            <div class="panel-tools">
+              <label class="search"><span>⌕</span><input id="search-input" type="search" placeholder="이름 검색" aria-label="이름 검색"></label>
+              <select id="status-filter" class="filter-select" aria-label="기록 상태 필터"><option value="all">전체 상태</option><option value="complete">두 영역 작성됨</option><option value="progressing">작성 중</option><option value="empty">미작성</option></select>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>학생</th><th>행동발달</th><th class="hide-mobile">교과 의견</th><th>기록 상태</th><th></th></tr></thead>
+              <tbody id="student-rows"></tbody>
+            </table>
+            <div class="empty-state" id="no-results" hidden>검색 결과가 없습니다.</div>
+          </div>
+          <div class="table-foot"><span id="list-summary">총 24명</span><button class="btn small" id="add-student">＋ 학생 추가</button></div>
+        </section>
+        <aside class="panel detail-panel" id="detail-panel">
+          <div class="detail-head">
+            <div class="detail-student">
+              <div class="student-avatar" id="detail-avatar">김</div>
+              <div><div class="detail-name" id="detail-name">학생을 선택해 주세요</div><div class="detail-sub" id="detail-sub">왼쪽 목록에서 학생을 선택하세요</div></div>
+            </div>
+          </div>
+          <div class="detail-body">
+            <div class="field">
+              <label class="field-label" for="behavior-notes">행동 관찰 정보</label>
+              <textarea id="behavior-notes" placeholder="예: 친구의 이야기에 귀 기울임&#10;맡은 일을 끝까지 수행함"></textarea>
+              <p class="notice">관찰한 사실을 한 줄씩 입력하세요. 쉼표로도 구분할 수 있습니다.</p>
+              <button class="btn small" id="generate-behavior">행동 의견 초안 생성</button>
+            </div>
+            <div class="field">
+              <div class="field-label">행동발달 및 종합의견 <small id="behavior-count">0자</small></div>
+              <textarea id="behavior-input" aria-label="행동발달 및 종합의견" placeholder="생성된 초안을 검토하고 직접 수정하세요."></textarea>
+            </div>
+            <div class="record-section">
+              <h3>교과 평가 입력</h3>
+              <p>평가 결과는 관찰한 수행 수준이나 내용을 구체적으로 적어 주세요. 교과별로 여러 평가를 추가할 수 있습니다.</p>
+              <input class="form-input" id="subject-input" placeholder="교과 (예: 국어)" aria-label="교과">
+              <textarea class="form-input" id="standard-input" placeholder="성취기준" aria-label="성취기준" style="min-height:55px"></textarea>
+              <textarea class="form-input" id="assessment-input" placeholder="평가내용" aria-label="평가내용" style="min-height:55px"></textarea>
+              <textarea class="form-input" id="result-input" placeholder="평가결과 (예: 글의 중심 내용을 정확히 파악함)" aria-label="평가결과" style="min-height:55px"></textarea>
+              <button class="btn small" id="add-evaluation">＋ 평가 추가</button>
+              <div id="evaluations" style="margin-top:10px"></div>
+              <button class="btn small" id="generate-subjects">교과별 의견 초안 생성</button>
+              <div id="subject-outputs"></div>
+            </div>
+            <div class="field" id="legacy-field" hidden><label class="field-label" for="opinion-input">기존 학기말 종합의견</label><textarea id="opinion-input"></textarea></div>
+            <div class="detail-actions">
+              <button class="btn primary" id="save-btn">저장하기</button>
+            </div>
+            <div class="tip"><span>✦</span><span><strong>기록 작성 팁</strong><br>생성 결과는 참고용 초안입니다. 입력 근거와 실제 학생의 모습을 확인한 뒤 수정해 주세요.</span></div>
+          </div>
+        </aside>
+      </section>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+  <script>
+    (() => {
+      const initial = ["강민서","고은우","김도윤","김서연","김하준","남지우","박서윤","박지호","배수아","서준호","송하린","신민재","오지안","유나율","윤서준","이가은","이도현","이서아","이지후","임채원","정다은","최민준","한예린","홍시우"];
+      const storageKey = "maeumgyeol-records-v1";
+      const $ = (selector) => document.querySelector(selector);
+      const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[char]));
+      const makeStudent = (name, id) => ({ id, name, behavior:"", opinion:"", behaviorNotes:"", evaluations:[], subjectOpinions:Object.create(null) });
+      let students;
+      try {
+        const saved = localStorage.getItem(storageKey);
+        students = saved ? JSON.parse(saved) : initial.map((name, i) => makeStudent(name, i + 1));
+        if (!Array.isArray(students) || students.some((s) => !s || typeof s.name !== "string" || !Number.isSafeInteger(s.id))) throw new Error("저장된 학생 데이터 형식이 올바르지 않습니다.");
+        students.forEach((s) => {
+          s.behavior = s.behavior || "";
+          s.opinion = s.opinion || "";
+          s.behaviorNotes = s.behaviorNotes || "";
+          s.evaluations = s.evaluations || [];
+          s.subjectOpinions = Object.assign(Object.create(null), s.subjectOpinions || {});
+        });
+      } catch (error) {
+        console.error(error);
+        alert("저장된 기록을 불러오지 못했습니다. 데이터를 덮어쓰지 않도록 앱을 중지합니다.");
+        return;
+      }
+      let selectedId = students[0]?.id ?? null;
+      let toastTimer;
+      const current = () => students.find((student) => student.id === selectedId);
+      const hasSubjectOpinion = (s) => Object.values(s.subjectOpinions).some((text) => text.trim()) || !!s.opinion.trim();
+      const statusOf = (s) => s.behavior.trim() && hasSubjectOpinion(s) ? "complete" : s.behavior.trim() || hasSubjectOpinion(s) || s.behaviorNotes.trim() || s.evaluations.length ? "progressing" : "empty";
+      const statusLabel = { complete:"두 영역 작성됨", progressing:"작성 중", empty:"미작성" };
+      function showToast(message) {
+        $("#toast").textContent = message;
+        $("#toast").classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => $("#toast").classList.remove("show"), 3000);
+      }
+      function persist() {
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(students));
+          $("#save-status").textContent = "모든 변경사항 저장됨";
+          return true;
+        } catch (error) {
+          console.error(error);
+          $("#save-status").textContent = "저장 실패";
+          alert("브라우저에 저장하지 못했습니다. 저장 공간이나 브라우저 설정을 확인하세요.");
+          return false;
+        }
+      }
+      function renderList() {
+        const query = $("#search-input").value.trim().toLowerCase();
+        const filter = $("#status-filter").value;
+        const visible = students.filter((s) => s.name.toLowerCase().includes(query) && (filter === "all" || statusOf(s) === filter));
+        $("#student-rows").innerHTML = visible.map((s) => `<tr data-id="${s.id}" class="${s.id === selectedId ? "selected" : ""}">
+          <td><div class="student"><div class="student-avatar">${escapeHtml(s.name[0])}</div><div><div class="student-name">${escapeHtml(s.name)}</div><div class="student-meta">${String(students.indexOf(s) + 1).padStart(2,"0")}번 학생</div></div></div></td>
+          <td>${s.behavior.trim() ? "기록됨" : "—"}</td><td class="hide-mobile">${hasSubjectOpinion(s) ? "기록됨" : "—"}</td>
+          <td><span class="status ${statusOf(s)}"><i></i>${statusLabel[statusOf(s)]}</span></td><td><span class="row-arrow">›</span></td></tr>`).join("");
+        $("#no-results").hidden = visible.length > 0;
+        $("#list-count").textContent = `(${visible.length})`;
+        $("#list-summary").textContent = `총 ${students.length}명 · ${visible.length}명 표시`;
+        const counts = { complete:0, progressing:0, empty:0 };
+        students.forEach((s) => counts[statusOf(s)]++);
+        $("#total-count").textContent = students.length;
+        $("#complete-count").textContent = counts.complete;
+        $("#progress-count").textContent = counts.progressing;
+        $("#empty-count").textContent = counts.empty;
+        $("#nav-count").textContent = students.length;
+        $("#completion-bar").style.width = `${students.length ? counts.complete / students.length * 100 : 0}%`;
+      }
+      function renderDetail() {
+        const s = current();
+        if (!s) return;
+        $("#detail-avatar").textContent = s.name[0];
+        $("#detail-name").textContent = s.name;
+        $("#detail-sub").textContent = `${String(students.indexOf(s) + 1).padStart(2,"0")}번 학생`;
+        $("#behavior-notes").value = s.behaviorNotes;
+        $("#behavior-input").value = s.behavior;
+        $("#behavior-count").textContent = `${s.behavior.length}자`;
+        $("#opinion-input").value = s.opinion;
+        $("#legacy-field").hidden = !s.opinion;
+        $("#evaluations").innerHTML = s.evaluations.map((e, i) => `<div class="evaluation"><button class="btn small" data-remove="${i}" aria-label="평가 삭제">삭제</button><strong>${escapeHtml(e.subject)}</strong><br>성취기준: ${escapeHtml(e.standard)}<br>평가내용: ${escapeHtml(e.assessment)}<br>평가결과: ${escapeHtml(e.result)}</div>`).join("");
+        $("#subject-outputs").innerHTML = Object.entries(s.subjectOpinions).map(([subject, text], i) => `<div class="subject-output"><label class="field-label" for="subject-output-${i}">${escapeHtml(subject)} 학기말 종합의견</label><textarea id="subject-output-${i}" data-subject-index="${i}">${escapeHtml(text)}</textarea></div>`).join("");
+        renderList();
+      }
+      function changed() { persist(); renderList(); }
+      function sentence(text) {
+        const clean = text.trim().replace(/[.!?。]+$/, "");
+        return clean ? clean + "." : "";
+      }
+      function behaviorDraft(notes) {
+        return notes.split(/[\n,;]+/).map((part) => {
+          const text = part.trim();
+          if (!text) return "";
+          if (/[.!?。]$/.test(text) || /(함|됨|임|음|ㅁ|다)$/.test(text)) return sentence(text);
+          return `관찰 내용: ${text}.`;
+        }).filter(Boolean).join(" ");
+      }
+      function subjectDraft(evaluations) {
+        return evaluations.map((e) => `성취기준 「${e.standard}」에 따른 ${e.assessment} 평가 결과: ${sentence(e.result)}`).join(" ");
+      }
+      function generate(s, overwrite) {
+        let count = 0;
+        const behavior = behaviorDraft(s.behaviorNotes);
+        if (behavior && (overwrite || !s.behavior.trim())) { s.behavior = behavior; count++; }
+        const subjects = [...new Set(s.evaluations.map((e) => e.subject))];
+        subjects.forEach((subject) => {
+          if (overwrite || !s.subjectOpinions[subject]?.trim()) {
+            s.subjectOpinions[subject] = subjectDraft(s.evaluations.filter((e) => e.subject === subject));
+            count++;
+          }
+        });
+        return count;
+      }
+      function parseCsv(text) {
+        text = text.replace(/^\uFEFF/, "");
+        const rows = [];
+        let row = [], field = "", quoted = false, closed = false;
+        for (let i = 0; i < text.length; i++) {
+          const ch = text[i];
+          if (quoted) {
+            if (ch === '"' && text[i + 1] === '"') { field += '"'; i++; }
+            else if (ch === '"') { quoted = false; closed = true; }
+            else field += ch;
+          } else if (ch === '"') {
+            if (field || closed) throw new Error("CSV의 큰따옴표 위치가 올바르지 않습니다.");
+            quoted = true;
+          } else if (ch === "," || ch === "\n" || ch === "\r") {
+            row.push(field); field = ""; closed = false;
+            if (ch !== ",") {
+              rows.push(row); row = [];
+              if (ch === "\r" && text[i + 1] === "\n") i++;
+            }
+          } else {
+            if (closed) throw new Error("닫는 큰따옴표 뒤에 예상하지 못한 문자가 있습니다.");
+            field += ch;
+          }
+        }
+        if (quoted) throw new Error("닫히지 않은 큰따옴표가 있습니다.");
+        if (field || row.length || closed) { row.push(field); rows.push(row); }
+        return rows.filter((r) => r.some((v) => v.trim()));
+      }
+      function importCsv(text) {
+        try {
+          const rows = parseCsv(text);
+          const headers = ["학생","행동관찰","교과","성취기준","평가내용","평가결과"];
+          if (!rows.length) throw new Error("CSV 내용이 비어 있습니다.");
+          const first = rows[0].map((v) => v.trim());
+          if (first.length !== headers.length || headers.some((h, i) => first[i] !== h)) throw new Error(`첫 행은 ${headers.join(",")} 순서여야 합니다.`);
+          if (rows.length === 1) throw new Error("가져올 데이터 행이 없습니다.");
+          const imported = rows.slice(1).map((row, i) => {
+            if (row.length !== headers.length) throw new Error(`${i + 2}번째 데이터 행의 열 개수가 올바르지 않습니다.`);
+            const [name, notes, subject, standard, assessment, result] = row.map((v) => v.trim());
+            if (!name) throw new Error(`${i + 2}번째 데이터 행에 학생 이름이 없습니다.`);
+            const evaluation = [subject, standard, assessment, result];
+            if (evaluation.some(Boolean) && !evaluation.every(Boolean)) throw new Error(`${i + 2}번째 데이터 행의 교과, 성취기준, 평가내용, 평가결과를 모두 입력하세요.`);
+            if (!notes && !evaluation.some(Boolean)) throw new Error(`${i + 2}번째 데이터 행에 관찰 또는 평가 정보가 없습니다.`);
+            return { name, notes, subject, standard, assessment, result };
+          });
+          const next = JSON.parse(JSON.stringify(students));
+          imported.forEach((r) => {
+            let s = next.find((item) => item.name === r.name);
+            if (!s) { s = makeStudent(r.name, next.reduce((max, item) => Math.max(max, item.id), 0) + 1); next.push(s); }
+            if (r.notes && !s.behaviorNotes.split("\n").includes(r.notes)) s.behaviorNotes = [s.behaviorNotes, r.notes].filter(Boolean).join("\n");
+            if (r.subject && !s.evaluations.some((e) => e.subject === r.subject && e.standard === r.standard && e.assessment === r.assessment && e.result === r.result)) {
+              s.evaluations.push({ subject:r.subject, standard:r.standard, assessment:r.assessment, result:r.result });
+            }
+          });
+          const previous = students;
+          next.forEach((s) => { s.subjectOpinions = Object.assign(Object.create(null), s.subjectOpinions); });
+          students = next;
+          if (!persist()) { students = previous; return false; }
+          renderDetail();
+          showToast(`${imported.length}개 행을 가져왔습니다. 초안을 생성해 주세요.`);
+          return true;
+        } catch (error) {
+          alert(`가져오기 실패: ${error.message}`);
+          return false;
+        }
+      }
+      function downloadCsv(rows, name, protect = false) {
+        const csv = "\uFEFF" + rows.map((row) => row.map((value) => {
+          let text = String(value ?? "");
+          if (protect && /^[\s]*[=+\-@\t\r]/.test(text)) text = "'" + text;
+          return `"${text.replace(/"/g, '""')}"`;
+        }).join(",")).join("\r\n");
+        const url = URL.createObjectURL(new Blob([csv], { type:"text/csv;charset=utf-8" }));
+        const link = document.createElement("a");
+        link.href = url; link.download = name; link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+      $("#search-input").addEventListener("input", renderList);
+      $("#status-filter").addEventListener("change", renderList);
+      $("#student-rows").addEventListener("click", (event) => {
+        const row = event.target.closest("tr[data-id]");
+        if (!row) return;
+        if (Number(row.dataset.id) !== selectedId && ["subject-input","standard-input","assessment-input","result-input"].some((id) => $("#" + id).value.trim()) && !confirm("추가하지 않은 교과 평가 입력이 사라집니다. 학생을 변경하시겠습니까?")) return;
+        selectedId = Number(row.dataset.id);
+        ["subject-input","standard-input","assessment-input","result-input"].forEach((id) => { $("#" + id).value = ""; });
+        renderDetail();
+      });
+      [["behavior-notes","behaviorNotes"],["behavior-input","behavior"],["opinion-input","opinion"]].forEach(([id, key]) => {
+        $("#" + id).addEventListener("input", (event) => {
+          if (!current()) return;
+          current()[key] = event.target.value;
+          $("#behavior-count").textContent = `${current().behavior.length}자`;
+          changed();
+        });
+      });
+      $("#subject-outputs").addEventListener("input", (event) => {
+        if (!current() || !event.target.matches("textarea[data-subject-index]")) return;
+        const subject = Object.keys(current().subjectOpinions)[Number(event.target.dataset.subjectIndex)];
+        current().subjectOpinions[subject] = event.target.value;
+        changed();
+      });
+      $("#add-evaluation").addEventListener("click", () => {
+        if (!current()) return;
+        const values = ["subject-input","standard-input","assessment-input","result-input"].map((id) => $("#" + id).value.trim());
+        if (values.some((value) => !value)) { alert("교과, 성취기준, 평가내용, 평가결과를 모두 입력하세요."); return; }
+        const [subject, standard, assessment, result] = values;
+        current().evaluations.push({ subject, standard, assessment, result });
+        ["subject-input","standard-input","assessment-input","result-input"].forEach((id) => { $("#" + id).value = ""; });
+        changed(); renderDetail();
+        showToast("평가를 추가했습니다. 교과 의견 초안을 다시 생성할 수 있습니다.");
+      });
+      $("#evaluations").addEventListener("click", (event) => {
+        const button = event.target.closest("[data-remove]");
+        if (!button || !current() || !confirm("이 평가를 삭제하시겠습니까? 이미 작성한 교과 의견은 유지됩니다.")) return;
+        current().evaluations.splice(Number(button.dataset.remove), 1);
+        changed(); renderDetail();
+      });
+      $("#generate-behavior").addEventListener("click", () => {
+        const s = current();
+        if (!s || !behaviorDraft(s.behaviorNotes)) { alert("먼저 행동 관찰 정보를 입력하세요."); return; }
+        if (s.behavior.trim() && !confirm("기존 행동 의견을 새 초안으로 바꾸시겠습니까?")) return;
+        s.behavior = behaviorDraft(s.behaviorNotes); changed(); renderDetail();
+        showToast("행동 의견 초안을 만들었습니다. 내용을 검토해 주세요.");
+      });
+      $("#generate-subjects").addEventListener("click", () => {
+        const s = current();
+        if (!s || !s.evaluations.length) { alert("먼저 교과 평가를 추가하세요."); return; }
+        const subjects = [...new Set(s.evaluations.map((e) => e.subject))];
+        if (subjects.some((subject) => s.subjectOpinions[subject]?.trim()) && !confirm("평가가 있는 교과의 기존 의견을 새 초안으로 바꾸시겠습니까?")) return;
+        subjects.forEach((subject) => { s.subjectOpinions[subject] = subjectDraft(s.evaluations.filter((e) => e.subject === subject)); });
+        changed(); renderDetail(); showToast("교과별 초안을 만들었습니다. 내용을 검토해 주세요.");
+      });
+      $("#generate-all").addEventListener("click", () => {
+        const count = students.reduce((sum, s) => sum + generate(s, false), 0);
+        if (!count) { showToast("생성할 빈 의견이 없습니다. 기존 의견은 유지됩니다."); return; }
+        changed(); renderDetail(); showToast(`${count}개의 빈 의견에 초안을 생성했습니다. 기존 의견은 유지됩니다.`);
+      });
+      $("#save-btn").addEventListener("click", () => { if (persist()) showToast("기록을 저장했습니다."); });
+      $("#add-student").addEventListener("click", () => {
+        const name = prompt("추가할 학생의 이름을 입력해 주세요.");
+        if (name === null) return;
+        const cleanName = name.trim();
+        if (!cleanName || students.some((s) => s.name === cleanName)) { alert("이름이 비어 있거나 이미 등록된 학생입니다."); return; }
+        const id = students.reduce((max, s) => Math.max(max, s.id), 0) + 1;
+        students.push(makeStudent(cleanName, id));
+        selectedId = id; $("#search-input").value = ""; $("#status-filter").value = "all";
+        changed(); renderDetail();
+      });
+      $("#csv-file").addEventListener("change", async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        try { importCsv(await file.text()); } catch (error) { alert(`파일을 읽지 못했습니다: ${error.message}`); }
+        event.target.value = "";
+      });
+      $("#import-text").addEventListener("click", () => { if (importCsv($("#csv-text").value)) $("#csv-text").value = ""; });
+      $("#template-btn").addEventListener("click", () => downloadCsv([
+        ["학생","행동관찰","교과","성취기준","평가내용","평가결과"],
+        ["예시학생","친구의 말을 끝까지 들음","국어","글의 중심 내용을 파악한다","설명하는 글 읽기","글의 중심 내용을 정확히 파악함"],
+        ["예시학생","","수학","분수의 덧셈을 계산한다","분수의 덧셈","계산 과정을 설명하며 문제를 해결함"]
+      ], "마음결_일괄입력_양식.csv"));
+      $("#export-btn").addEventListener("click", () => {
+        const rows = [["학생","행동관찰","행동발달 및 종합의견","교과","성취기준","평가내용","평가결과","교과 학기말 종합의견","기존 학기말 종합의견"]];
+        students.forEach((s) => {
+          const subjects = [...new Set([...s.evaluations.map((e) => e.subject), ...Object.keys(s.subjectOpinions)])];
+          if (!subjects.length) rows.push([s.name,s.behaviorNotes,s.behavior,"","","","", "",s.opinion]);
+          subjects.forEach((subject) => {
+            const evaluations = s.evaluations.filter((e) => e.subject === subject);
+            if (!evaluations.length) evaluations.push({ standard:"",assessment:"",result:"" });
+            evaluations.forEach((e) => rows.push([s.name,s.behaviorNotes,s.behavior,subject,e.standard,e.assessment,e.result,s.subjectOpinions[subject] || "",s.opinion]));
+          });
+        });
+        downloadCsv(rows, "마음결_학생기록.csv", true);
+        showToast("CSV 파일을 내려받았습니다.");
+      });
+      $("#print-btn").addEventListener("click", () => window.print());
+      renderList();
+      renderDetail();
+    })();
+  </script>
+</body>
+</html>
